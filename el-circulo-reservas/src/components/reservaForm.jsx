@@ -9,7 +9,7 @@ const ReservaForm = ({ nombre, setNombre, total, handleSubmit }) => {
         id="nombre"
         value={nombre}
         onChange={(e) => setNombre(e.target.value)}
-        className="mb-4 p-3 border border-gray-300 rounded w-full"
+        className="mb-4 p-3 border bg-zinc-800 border-gray-300 rounded w-full"
       />
       <p className="text-lg font-semibold mb-4">Total: ${total}</p>
       <button

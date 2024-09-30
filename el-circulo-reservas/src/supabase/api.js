@@ -24,6 +24,26 @@ export const crearReserva = async ( fecha, horario, cancha, total, nombre) => {
   return true
 }
 
+// Hacer una reserva
+export const crearPrecio = async (dia, hora, cancha, precio) => {
+  const { error } = await supabase.from('precios').insert([
+    {
+      
+      dia,
+      hora,
+      cancha,
+      precio
+    },
+  ])
+
+  if (error) {
+    console.error('Error creando el precio:', error)
+    return false
+  }
+
+  return true
+}
+
 // Función para obtener las reservas por fecha
 
 export const obtenerReservasPorFecha = async (fechaSeleccionada) => {
@@ -61,7 +81,7 @@ export const obtenerReservasPorFecha = async (fechaSeleccionada) => {
 // Obtener los horarios reservados para una fecha específica
 
 
-export const obtenerDisponibilidadTenis = async (fecha, cancha) => {
+export const obtenerDisponibilidad = async (fecha, cancha) => {
   try {
     // Formatear la fecha a "yyyy/mm/dd"
     const formattedDate = `${fecha.getFullYear()}/${(fecha.getMonth() + 1).toString().padStart(2, '0')}/${fecha.getDate().toString().padStart(2, '0')}`;
@@ -75,11 +95,28 @@ export const obtenerDisponibilidadTenis = async (fecha, cancha) => {
 
     if (error) throw error;
 
-    // Todos los horarios precargados
+    // Todos los horarios precargados (08:00 a 22:00)
     const todosLosHorarios = Array.from({ length: 15 }, (_, i) => {
       const hora = (8 + i).toString().padStart(2, '0'); // Genera horarios desde 08:00 a 22:00
       return `${hora}:00`;
     });
+
+    // Definir el umbral de ocupación según el tipo de cancha
+    let umbralOcupacion;
+    switch (cancha) {
+      case "Tenis":
+        umbralOcupacion = 7;
+        break;
+      case "Paddle":
+        umbralOcupacion = 2;
+        break;
+      case "Futbol5":
+      case "Futbol7":
+        umbralOcupacion = 1;
+        break;
+      default:
+        umbralOcupacion = 7; // Umbral por defecto
+    }
 
     // Contar las ocurrencias de cada horario
     const horasContadas = data.reduce((acc, { horario }) => {
@@ -87,9 +124,9 @@ export const obtenerDisponibilidadTenis = async (fecha, cancha) => {
       return acc;
     }, {});
 
-    // Filtrar los horarios que se repiten 7 veces o más
+    // Filtrar los horarios que superan el umbral de ocupación según el tipo de cancha
     const horariosOcupados = Object.entries(horasContadas)
-      .filter(([_, count]) => count >= 7)
+      .filter(([_, count]) => count >= umbralOcupacion)
       .map(([hora]) => hora);
 
     // Filtrar los horarios ocupados del listado completo
@@ -101,6 +138,7 @@ export const obtenerDisponibilidadTenis = async (fecha, cancha) => {
     return []; // Retorna un array vacío en caso de error
   }
 };
+
 
 
 export const devolverPrecio = async (fecha, horario) => {

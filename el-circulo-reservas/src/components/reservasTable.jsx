@@ -41,6 +41,29 @@ const AdminReservasTable = () => {
       {/* Mostrar tabla solo si hay una fecha seleccionada */}
       {fecha && (
         <div className="mt-4">
+          
+      {/* Barra de búsqueda por nombre */}
+      <div className="m-2">
+        <label htmlFor="search" className="block text-lg font-medium">Buscar por Nombre:</label>
+        <input
+          type="text"
+          id="search"
+          placeholder="Ingresa Un Nombre"
+          className="border p-1 w-full rounded-lg"
+        />
+      </div>
+
+      {/* Filtro por tipo de cancha */}
+      <div className="m-2  ">
+        <label htmlFor="cancha" className="block text-lg font-medium ">Filtrar por Tipo de Cancha:</label>
+        <select id="cancha" className="border p-1 w-full text-gray-800 rounded-lg">
+          <option value="">Todas</option>
+          <option value="tenis">Tenis</option>
+          <option value="futbol5">Fútbol 5</option>
+          <option value="futbol6">Fútbol 6</option>
+          <option value="padel">Pádel</option>
+        </select>
+      </div>
           <h2 className="text-xl mb-2">Reservas para el {new Date(fecha).toLocaleDateString()}</h2>
           {loading ? (
             <p>Cargando reservas...</p>

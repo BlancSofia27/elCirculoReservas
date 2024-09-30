@@ -5,11 +5,16 @@ import Calendario from '../components/calendar';
 import { crearReserva } from '../supabase/api';
 import Hero from '../components/Hero';
 import { devolverPrecio } from '../supabase/api';  // Importamos la nueva función
+import axios from 'axios';
+import { initMercadoPago, Wallet } from '@mercadopago/sdk-react'
+initMercadoPago('APP_USR-58eeb5bd-e9ee-4df7-9367-45fd7cd59738', {locale:"es-AR"});
+
 
 const Reservar = () => {
   const [fecha, setFecha] = useState(null);
   const [cancha, setCancha] = useState('');
   const [horarioSeleccionado, setHorarioSeleccionado] = useState('');  // Capturamos el horario seleccionado
+  const [preferenceId,setPreferenceId] = useState(null);
   const [nombre, setNombre] = useState('');
   const [total, setTotal] = useState(0);
 
@@ -44,34 +49,86 @@ const Reservar = () => {
     }
   };
 
+  
+  const createPreference = async () => {
+    try {
+      const response = await axios.post("http://localhost3000/create_preference",{
+      title:`Reserva de cancha de ${cancha}, Fecha: ${fecha} Turno: ${horarioSeleccionado}`,
+      quantity:1,
+      price:{total},
+    });
+    const {id} = response.data
+    return id;
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+const handleBuy = async () => {
+  const id = await createPreference();
+  if (id){
+    setPreferenceId(id);
+  }
+};
+
+
   return (
+    <div>
+    <Hero />
     <div className="p-4 text-white min-h-screen font-clear">
-      <Hero />
-      <Calendario onDateChange={setFecha} selectedDate={fecha} />
-      <SelectCancha onCanchaChange={setCancha} />
-      {cancha && fecha && (
-        <>
-          <SelectorHorario
-            fecha={fecha}
-            cancha={cancha}
-            onHorarioSeleccionado={setHorarioSeleccionado}  // Capturamos el horario seleccionado
-          />
-          <div className="mt-4 text-black">
-            <input
-              type="text"
-              placeholder="Nombre"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              className="border p-2 w-full mb-2"
-            />
-            <p className="mb-2">Total: ${total}</p>
-            <button onClick={handleReserva} className="bg-blue-500 text-white py-2 px-4 rounded">
-              Confirmar Reserva
-            </button>
+      {/* Contenedor principal que divide el contenido en columnas en pantallas xl */}
+      <div className="flex flex-col xl:flex-row xl:justify-between items-center xl:space-x-8">
+        {/* Calendario a la izquierda con mismo tamaño que la columna derecha */}
+        <div className="flex-none xl:w-1/2 flex justify-center mb-8 xl:mb-0">
+          <Calendario onDateChange={setFecha} selectedDate={fecha} />
+        </div>
+  
+        {/* Contenedor a la derecha con el resto del contenido */}
+        <div className="flex-grow xl:w-1/2 flex justify-center">
+          <div className="flex flex-col items-center w-full xl:w-[400px]">
+            <SelectCancha onCanchaChange={setCancha} />
+            
+            {cancha && fecha && (
+              <div className="flex flex-col items-center">
+                <SelectorHorario
+                  fecha={fecha}
+                  cancha={cancha}
+                  onHorarioSeleccionado={setHorarioSeleccionado} // Capturamos el horario seleccionado
+                />
+                
+                {/* Sección del formulario de reserva */}
+                <div className="mt-4 flex flex-col items-center">
+                  <input
+                    type="text"
+                    placeholder="Nombre"
+                    value={nombre}
+                    onChange={(e) => setNombre(e.target.value)}
+                    className="border p-2 w-full mb-2 bg-zinc-800 text-white rounded-sm"
+                  />
+                  <p className="m-4 text-center text-xl">Total: ${total}</p>
+  
+                  <button
+                    onClick={handleReserva}
+                    className="bg-blue-500 text-white py-2 px-4 rounded"
+                  >
+                    Confirmar Reserva
+                  </button>
+  
+                  {preferenceId && (
+                    <Wallet
+                      initialization={{ preferenceId: '<PREFERENCE_ID>' }}
+                      customization={{ texts: { valueProp: 'smart_option' } }}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
           </div>
-        </>
-      )}
+        </div>
+      </div>
     </div>
+  </div>
+  
   );
 };
 
